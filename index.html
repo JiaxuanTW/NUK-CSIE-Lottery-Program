@@ -60,7 +60,8 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
-                        <button type="button" class="btn btn-primary" onclick="organizeList()" data-dismiss="modal">整理名單</button>
+                        <button type="button" class="btn btn-primary" onclick="organizeList()"
+                            data-dismiss="modal">整理名單</button>
                     </div>
                 </div>
             </div>
@@ -78,7 +79,7 @@
                         <h6 id="number">從 NULL 人中抽出 NULL 名得獎者</h6>
                         <h2>中獎名單</h2>
                         <p id="lucky"></p>
-                        <hr/>
+                        <hr />
                         <h5 class="text-muted">已經抽過名單</h5>
                         <p class="text-muted" id="repeatList"></p>
                     </div>
@@ -90,10 +91,143 @@
         </div>
 
         <footer class="my-3 pt-1 text-muted text-center text-small">
-            <p class="mb-1">©2020 &nbsp; JiaxuanTW．國立高雄大學 資訊工程學系 112級系學會</p>
+            <p class="mb-1">©2020 &nbsp;<a href="https://github.com/JiaxuanTW">JiaxuanTW</a>．國立高雄大學 資訊工程學系 112級系學會</p>
         </footer>
     </div>
-    <script src="/script.js"></script>
+
+    <!-- <script src="/script.js"></script> -->
+    <!-- for GitHub Page -->
+    <script type="text/javascript">
+
+        var winner = new Set(); // 已經抽中過之得獎者 // GLOBAL
+
+        function listCheck() {
+            var result = new Set(); // 整理完成名單
+            var repeat = new Set(); // 重複名單
+
+            var content = document.getElementById('textArea').value;
+            var lotteryList = content.split('\n');
+            lotteryList.forEach(item => {
+                item = item.replace(/\s*/g, ''); // 移除字串間空白
+                item = item.toUpperCase();
+                if (item != '')
+                    result.has(item) ? repeat.add(item) : result.add(item);
+            });
+
+            // 輸出到 checkModal
+            var inputRepeat = document.getElementById('inputRepeat');
+            var output = '';
+            repeat.forEach(item => {
+                output += item + '<br>';
+            });
+            if (repeat.size)
+                inputRepeat.innerHTML = output;
+            else
+                inputRepeat.innerHTML = '太好了，沒有重複的情況。';
+            // console.log(repeat)
+            // console.log(result)
+
+            // 清空紀錄
+            result.clear()
+            repeat.clear()
+        }
+
+        function organizeList() {
+            var result = new Set(); // 整理完成名單
+            var repeat = new Set(); // 重複名單
+            var textArea = document.getElementById('textArea');
+
+            var content = textArea.value;
+            var lotteryList = content.split('\n');
+            lotteryList.forEach(item => {
+                item = item.replace(/\s*/g, ''); // 移除字串間空白
+                item = item.toUpperCase();
+                if (item != '')
+                    result.has(item) ? repeat.add(item) : result.add(item);
+            });
+
+            // 輸出到 textArea
+            var output = ''
+            result.forEach(item => {
+                output += item + '\n';
+            });
+            // output -= '\n';
+            output = output.substring(0, output.length - 1); // 去除最後換行
+            textArea.value = output;
+
+            // 清空紀錄
+            result.clear()
+            repeat.clear()
+        }
+
+        function getRandomInt(max) {
+            // 取得 0(含) ~ Max(不含) 之隨機整數
+            return Math.floor(Math.random() * Math.floor(max));
+        }
+
+        function lottery() {
+            var content = document.getElementById('textArea').value;
+            var lotteryList = content.split('\n');
+            if (lotteryList[0] == '')
+                lotteryList.pop();
+
+            var value = document.getElementById('value').value; // 抽幾個人
+            var repeat = document.getElementById('repeat'); // 是否重複抽
+
+            var lucky = document.getElementById('lucky');
+            var repeatList = document.getElementById('repeatList');
+
+            // 處理已抽過名單
+            if (!repeat.checked)
+                repeatList.innerText = '如果不想要抽到同一個人，請勾選「名額不重複」。';
+            else {
+                pWinner = ''
+                winner.forEach(item => {
+                    pWinner += item + '<br>';
+                });
+                repeatList.innerHTML = pWinner;
+            }
+
+            // 人數統計
+            if (value > lotteryList.length)
+                value = lotteryList.length;
+            if (value > lotteryList.length - winner.size && repeat.checked)
+                value = lotteryList.length - winner.size;
+            if (value < 0)
+                value = 0;
+            if (repeat.checked)
+                document.getElementById('number').innerText = '從 ' + (lotteryList.length - winner.size) + ' 人中抽出 ' + value + ' 名得獎者'
+            else
+                document.getElementById('number').innerText = '從 ' + lotteryList.length + ' 人中抽出 ' + value + ' 名得獎者'
+
+            // 抽獎
+            output = '';
+            var temp = new Set();
+            for (var i = 0; i < value; i++) {
+                if (repeat.checked) { // 名額不要重複
+                    var tempWinner = lotteryList[getRandomInt(lotteryList.length)];
+                    console.log(tempWinner);
+                    while (winner.has(tempWinner))
+                        tempWinner = lotteryList[getRandomInt(lotteryList.length)];
+                    winner.add(tempWinner);
+                    output += tempWinner + '<br>';
+                }
+                else {
+                    var rand = '';
+                    do {
+                        rand = lotteryList[getRandomInt(lotteryList.length)];
+                    } while (temp.has(rand));
+                    output += rand + '<br>';
+                    temp.add(rand);
+                }
+            }
+            temp.clear();
+            lucky.innerHTML = output;
+        };
+
+        // 離開頁面警告
+        window.onbeforeunload = function (event) { return confirm("確定離開此頁面嗎？"); }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-popRpmFF9JQgExhfw5tZT4I9/CI5e2QcuUZPOVXb1m7qUmeR2b50u+YFEYe1wgzy"
         crossorigin="anonymous"></script>
